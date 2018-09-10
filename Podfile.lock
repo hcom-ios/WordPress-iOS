@@ -16,6 +16,7 @@ PODS:
   - AFNetworking/UIKit (3.2.1):
     - AFNetworking/NSURLSession
   - Alamofire (4.7.2)
+  - AppCenterXCUITestExtensions (1.0.0)
   - Automattic-Tracks-iOS (0.2.3):
     - CocoaLumberjack (~> 3.4.1)
     - Reachability (~> 3.1)
@@ -143,6 +144,7 @@ DEPENDENCIES:
   - 1PasswordExtension (= 1.8.5)
   - AFNetworking (= 3.2.1)
   - Alamofire (= 4.7.2)
+  - AppCenterXCUITestExtensions
   - Automattic-Tracks-iOS (from `https://github.com/Automattic/Automattic-Tracks-iOS.git`, tag `0.2.3`)
   - BuddyBuildSDK (= 1.0.17)
   - CocoaLumberjack (= 3.4.2)
@@ -179,6 +181,7 @@ SPEC REPOS:
     - 1PasswordExtension
     - AFNetworking
     - Alamofire
+    - AppCenterXCUITestExtensions
     - BuddyBuildSDK
     - CocoaLumberjack
     - Crashlytics
@@ -230,6 +233,7 @@ SPEC CHECKSUMS:
   1PasswordExtension: 0e95bdea64ec8ff2f4f693be5467a09fac42a83d
   AFNetworking: b6f891fdfaed196b46c7a83cf209e09697b94057
   Alamofire: e4fa87002c137ba2d8d634d2c51fabcda0d5c223
+  AppCenterXCUITestExtensions: 8825ed941664fa21d6740a5ed6928a84c06623ac
   Automattic-Tracks-iOS: d8c6c6c1351b1905a73e45f431b15598d71963b5
   BuddyBuildSDK: 8ae12ee721098b356a961ea7dce70ae55f93a7d2
   CocoaLumberjack: db7cc9e464771f12054c22ff6947c5a58d43a0fd
@@ -263,6 +267,6 @@ SPEC CHECKSUMS:
   wpxmlrpc: bfc572f62ce7ee897f6f38b098d2ba08732ecef4
   ZendeskSDK: 2cda4db2ba6b10ba89aeb8dddaa94e97c85946a0
 
-PODFILE CHECKSUM: c4214abccbba1d340f96dc465bc7432fb426ab88
+PODFILE CHECKSUM: 175d5d7db0f2c059fd6f9a9382e142e05f5e0d7d
 
 COCOAPODS: 1.5.3
