@@ -1,4 +1,4 @@
-# Contributing to WordPress-iOS
+# Contributing to WordPress-iOS 
 
 Hi! Thank you for your interest in contributing to the app, we really appreciate it.
 
