@@ -1,2 +1,0 @@
-Hemos estado cambiando cosas bajo el capó.
-Puede que no veas nada obvio diferente en la aplicación, pero esperamos que todo sea más rápido y más estable.

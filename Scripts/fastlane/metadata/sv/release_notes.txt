@@ -1,2 +1,0 @@
-Vi har trimmat olika saker under huven.
-Det är möjligt att du inte kommer att märka någon direkt skillnad inne i appen, men du kan förvänta dig att den överlag ska vara snabbare och mer stabil.

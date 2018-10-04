@@ -1,2 +1,0 @@
-Nous avons changer quelques choses sous le capot.
-Vous ne devriez voir aucun changement évident dans l’app mais attendez-vous à ce que tout soit plus rapide et plus stable.
