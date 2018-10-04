@@ -1,14 +1,4 @@
 
-/// Protocol to help transition from NotificationBlock to FormattableObject
-protocol ActionableObject: AnyObject {
-    var notificationID: String? { get }
-    var metaSiteID: NSNumber? { get }
-    var metaCommentID: NSNumber? { get }
-    var isCommentApproved: Bool { get }
-    var text: String? { get }
-    var textOverride: String? { get set }
-}
-
 protocol FormattableContentActionParser {
     func parse(_ dictionary: [String: AnyObject]?) -> [FormattableContentAction]
 }
@@ -46,20 +36,31 @@ public struct Identifier: Equatable, Hashable {
     }
 }
 
+extension Identifier: Comparable {
+    public static func < (lhs: Identifier, rhs: Identifier) -> Bool {
+        return lhs.rawValue < rhs.rawValue
+    }
+}
+
 extension Identifier: CustomStringConvertible {
     public var description: String {
         return rawValue
     }
 }
 
+extension Identifier {
+    static func empty() -> Identifier {
+        return Identifier(value: "")
+    }
+}
 
 typealias ActionContextRequest = (NotificationDeletionRequest?, Bool) -> Void
-struct ActionContext {
-    let block: ActionableObject
+struct ActionContext<ContentType: FormattableContent> {
+    let block: ContentType
     let content: String
     let completion: ActionContextRequest?
 
-    init(block: ActionableObject, content: String = "", completion: ActionContextRequest? = nil) {
+    init(block: ContentType, content: String = "", completion: ActionContextRequest? = nil) {
         self.block = block
         self.content = content
         self.completion = completion
@@ -67,12 +68,13 @@ struct ActionContext {
 }
 
 protocol FormattableContentAction: CustomStringConvertible {
+
     var identifier: Identifier { get }
     var enabled: Bool { get }
     var on: Bool { get }
     var command: FormattableContentActionCommand? { get }
 
-    func execute(context: ActionContext)
+    func execute<ContentType: FormattableContent>(context: ActionContext<ContentType>)
 }
 
 extension FormattableContentAction {

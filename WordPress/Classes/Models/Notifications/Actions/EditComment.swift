@@ -7,7 +7,7 @@ class EditComment: DefaultNotificationActionCommand {
     let editIcon: UIButton = {
         let button = MGSwipeButton(title: title, backgroundColor: WPStyleGuide.wordPressBlue())
         button.accessibilityLabel = title
-        button.accessibilityTraits = UIAccessibilityTraitButton
+        button.accessibilityTraits = UIAccessibilityTraits.button
         button.accessibilityHint = hint
         return button
     }()
@@ -16,7 +16,7 @@ class EditComment: DefaultNotificationActionCommand {
         return editIcon
     }
 
-    override func execute(context: ActionContext) {
+    override func execute<ContentType: FormattableCommentContent>(context: ActionContext<ContentType>) {
         let block = context.block
         let content = context.content
         actionsService?.updateCommentWithBlock(block, content: content, completion: { success in

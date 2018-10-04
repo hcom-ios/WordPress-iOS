@@ -130,6 +130,16 @@ static CGFloat const WPTabBarIconSize = 32.0f;
                                                    object:nil];
 
         [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(showReaderBadge:)
+                                                     name:NSNotification.NewsCardAvailable
+                                                   object:nil];
+
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(hideReaderBadge:)
+                                                     name:NSNotification.NewsCardNotAvailable
+                                                   object:nil];
+
+        [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(defaultAccountDidChange:)
                                                      name:WPAccountDefaultWordPressComAccountChangedNotification
                                                    object:nil];
@@ -489,13 +499,18 @@ static CGFloat const WPTabBarIconSize = 32.0f;
 
 - (void)showPostTab
 {
+    [self showPostTabWithCompletion:nil];
+}
+
+- (void)showPostTabWithCompletion:(void (^)(void))afterDismiss
+{
     NSManagedObjectContext *context = [[ContextManager sharedInstance] mainContext];
     BlogService *blogService = [[BlogService alloc] initWithManagedObjectContext:context];
     // Ignore taps on the post tab and instead show the modal.
     if ([blogService blogCountForAllAccounts] == 0) {
         [self switchMySitesTabToAddNewSite];
     } else {
-        [self showPostTabAnimated:true toMedia:false];
+        [self showPostTabAnimated:true toMedia:false blog:nil afterDismiss:afterDismiss];
     }
 }
 
@@ -527,6 +542,11 @@ static CGFloat const WPTabBarIconSize = 32.0f;
 
 - (void)showPostTabAnimated:(BOOL)animated toMedia:(BOOL)openToMedia blog:(Blog *)blog
 {
+    [self showPostTabAnimated:animated toMedia:openToMedia blog:blog afterDismiss:nil];
+}
+
+- (void)showPostTabAnimated:(BOOL)animated toMedia:(BOOL)openToMedia blog:(Blog *)blog afterDismiss:(void (^)(void))afterDismiss
+{
     if (self.presentedViewController) {
         [self dismissViewControllerAnimated:NO completion:nil];
     }
@@ -545,6 +565,7 @@ static CGFloat const WPTabBarIconSize = 32.0f;
     editor.modalPresentationStyle = UIModalPresentationFullScreen;
     editor.showImmediately = !animated;
     editor.openWithMediaPicker = openToMedia;
+    editor.afterDismiss = afterDismiss;
     [WPAppAnalytics track:WPAnalyticsStatEditorCreatedPost withProperties:@{ @"tap_source": @"tab_bar"} withBlog:blog];
     [self presentViewController:editor animated:NO completion:nil];
     return;
@@ -898,6 +919,18 @@ static CGFloat const WPTabBarIconSize = 32.0f;
     }
 }
 
+- (void) showReaderBadge:(NSNotification *)notification
+{
+    UIImage *readerTabBarImage = [[UIImage imageNamed:@"icon-tab-reader-unread"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+    self.readerNavigationController.tabBarItem.image = readerTabBarImage;
+}
+
+- (void) hideReaderBadge:(NSNotification *)notification
+{
+    UIImage *readerTabBarImage = [UIImage imageNamed:@"icon-tab-reader"];
+    self.readerNavigationController.tabBarItem.image = readerTabBarImage;
+}
+
 - (void)updateMeNotificationIcon
 {
     UITabBarItem *meTabBarItem = self.tabBar.items[WPTabMe];
@@ -964,6 +997,18 @@ static CGFloat const WPTabBarIconSize = 32.0f;
 - (void)willTransitionToTraitCollection:(UITraitCollection *)newCollection withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator
 {
     [super willTransitionToTraitCollection:newCollection withTransitionCoordinator:coordinator];
+}
+
+#pragma mark - UIViewControllerTransitioningDelegate
+
+- (UIPresentationController *)presentationControllerForPresentedViewController:(UIViewController *)presented presentingViewController:(UIViewController *)presenting sourceViewController:(UIViewController *)source
+{
+    if ([presented isKindOfClass:[FancyAlertViewController class]]) {
+        return [[FancyAlertPresentationController alloc] initWithPresentedViewController:presented
+                                                                presentingViewController:presenting];
+    }
+
+    return nil;
 }
 
 @end

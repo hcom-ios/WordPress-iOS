@@ -8,7 +8,7 @@ class TrashComment: DefaultNotificationActionCommand {
     let trashIcon: UIButton = {
         let button = MGSwipeButton(title: title, backgroundColor: WPStyleGuide.errorRed())
         button.accessibilityLabel =  title
-        button.accessibilityTraits = UIAccessibilityTraitButton
+        button.accessibilityTraits = UIAccessibilityTraits.button
         button.accessibilityHint = hint
         return button
     }()
@@ -17,7 +17,7 @@ class TrashComment: DefaultNotificationActionCommand {
         return trashIcon
     }
 
-    override func execute(context: ActionContext) {
+    override func execute<ContentType: FormattableCommentContent>(context: ActionContext<ContentType>) {
         ReachabilityUtils.onAvailableInternetConnectionDo {
             let request = NotificationDeletionRequest(kind: .deletion, action: { [weak self] requestCompletion in
                 self?.actionsService?.deleteCommentWithBlock(context.block, completion: { success in

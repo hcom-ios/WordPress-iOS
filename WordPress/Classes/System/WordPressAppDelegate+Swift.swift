@@ -103,6 +103,7 @@ extension WordPressAppDelegate {
         guard AccountHelper.isLoggedIn,
             activity.activityType == NSUserActivityTypeBrowsingWeb,
             let url = activity.webpageURL else {
+                FailureNavigationAction().failAndBounce(activity.webpageURL)
                 return
         }
 
@@ -187,7 +188,7 @@ extension WordPressAppDelegate {
 // MARK: - Debugging
 
 extension WordPressAppDelegate {
-    @objc func printDebugLaunchInfoWithLaunchOptions(_ launchOptions: [UIApplicationLaunchOptionsKey: Any]? = nil) {
+    @objc func printDebugLaunchInfoWithLaunchOptions(_ launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) {
         let unknown = "Unknown"
 
         let device = UIDevice.current
@@ -292,12 +293,12 @@ extension WordPressAppDelegate {
 
         nc.addObserver(self,
                        selector: #selector(handleLowMemoryWarningNotification(_:)),
-                       name: NSNotification.Name.UIApplicationDidReceiveMemoryWarning,
+                       name: UIApplication.didReceiveMemoryWarningNotification,
                        object: nil)
 
         nc.addObserver(self,
                        selector: #selector(handleUIContentSizeCategoryDidChangeNotification(_:)),
-                       name: NSNotification.Name.UIContentSizeCategoryDidChange,
+                       name: UIContentSizeCategory.didChangeNotification,
                        object: nil)
 
         nc.addObserver(self,
@@ -310,10 +311,12 @@ extension WordPressAppDelegate {
         // If the notification object is not nil, then it's a login
         if notification.object != nil {
             setupShareExtensionToken()
+            configureNotificationExtension()
         } else {
             trackLogoutIfNeeded()
             removeTodayWidgetConfiguration()
             removeShareExtensionConfiguration()
+            removeNotificationExtensionConfiguration()
             showWelcomeScreenIfNeeded(animated: false)
         }
 
@@ -371,5 +374,30 @@ extension WordPressAppDelegate {
     @objc func saveRecentSitesForExtensions() {
         let recentSites = RecentSitesService().recentSites
         ShareExtensionService.configureShareExtensionRecentSites(recentSites)
+    }
+
+    // MARK: - Notification Service Extension
+
+    @objc
+    func configureNotificationExtension() {
+        let context = ContextManager.sharedInstance().mainContext
+        let accountService = AccountService(managedObjectContext: context)
+
+        if let account = accountService.defaultWordPressComAccount() {
+            NotificationSupportService.insertContentExtensionToken(account.authToken)
+            NotificationSupportService.insertContentExtensionUsername(account.username)
+
+            NotificationSupportService.insertServiceExtensionToken(account.authToken)
+            NotificationSupportService.insertServiceExtensionUsername(account.username)
+        }
+    }
+
+    @objc
+    func removeNotificationExtensionConfiguration() {
+        NotificationSupportService.deleteContentExtensionToken()
+        NotificationSupportService.deleteContentExtensionUsername()
+
+        NotificationSupportService.deleteServiceExtensionToken()
+        NotificationSupportService.deleteServiceExtensionUsername()
     }
 }

@@ -8,7 +8,7 @@ class ReplyToComment: DefaultNotificationActionCommand {
     let replyIcon: UIButton = {
         let button = MGSwipeButton(title: title, backgroundColor: WPStyleGuide.wordPressBlue())
         button.accessibilityLabel = title
-        button.accessibilityTraits = UIAccessibilityTraitButton
+        button.accessibilityTraits = UIAccessibilityTraits.button
         button.accessibilityHint = hint
         return button
     }()
@@ -17,7 +17,7 @@ class ReplyToComment: DefaultNotificationActionCommand {
         return replyIcon
     }
 
-    override func execute(context: ActionContext) {
+    override func execute<ContentType: FormattableCommentContent>(context: ActionContext<ContentType>) {
         let block = context.block
         let content = context.content
         actionsService?.replyCommentWithBlock(block, content: content, completion: { success in

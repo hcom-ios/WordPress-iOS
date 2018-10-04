@@ -103,22 +103,23 @@ class WPRichContentView: UITextView {
                 "a { color: #0087be; text-decoration: none; } " +
                 "a:active { color: #005082; } " +
                 "</style>"
-            let content = style + str
+            let html = style + str
             // Request the font to ensure it's loaded. Otherwise NSAttributedString
             // falls back to Times New Roman :o
             // https://github.com/wordpress-mobile/WordPress-iOS/issues/6564
             _ = WPFontManager.notoItalicFont(ofSize: 16)
             do {
-                if let attrTxt = try NSAttributedString.attributedStringFromHTMLString(content, defaultDocumentAttributes: nil) {
+                if let attrTxt = try NSAttributedString.attributedStringFromHTMLString(html, defaultAttributes: nil) {
                     let mattrTxt = NSMutableAttributedString(attributedString: attrTxt)
 
                     // Ensure the starting paragraph style is applied to the topMarginAttachment else the
                     // first paragraph might not have the correct line height.
-                    var paraStyle = NSParagraphStyle.default
-                    if attrTxt.length > 0 {
-                        if let pstyle = attrTxt.attribute(.paragraphStyle, at: 0, effectiveRange: nil) as? NSParagraphStyle {
-                            paraStyle = pstyle
-                        }
+                    let paraStyle: NSParagraphStyle
+                    if let pstyle = attrTxt.attribute(.paragraphStyle, at: 0, effectiveRange: nil) as? NSParagraphStyle,
+                        attrTxt.length > 0 {
+                        paraStyle = pstyle
+                    } else {
+                        paraStyle = .default
                     }
                     mattrTxt.insert(NSAttributedString(attachment: topMarginAttachment), at: 0)
                     mattrTxt.addAttributes([.paragraphStyle: paraStyle], range: NSRange(location: 0, length: 1))
@@ -257,7 +258,7 @@ extension WPRichContentView: WPTextAttachmentManagerDelegate {
 
     /// Creates and return a `WPRichTextImage` with the given parameters.
     ///
-    fileprivate func ritchTextImage(with size: CGSize, _ url: URL, _ attachment: WPTextAttachment) -> WPRichTextImage {
+    fileprivate func richTextImage(with size: CGSize, _ url: URL, _ attachment: WPTextAttachment) -> WPRichTextImage {
         let image = WPRichTextImage(frame: CGRect(x: 0.0, y: 0.0, width: size.width, height: size.height))
         image.addTarget(self, action: #selector(type(of: self).handleImageTapped(_:)), for: .touchUpInside)
         image.contentURL = url
@@ -269,8 +270,15 @@ extension WPRichContentView: WPTextAttachmentManagerDelegate {
     /// Returns the CGSize instance for the given `WPTextAttachment`
     ///
     fileprivate func sizeForAttachment(_ attachment: WPTextAttachment) -> CGSize {
-        let width: CGFloat = attachment.width > 0 ? attachment.width : textContainer.size.width
+        let width: CGFloat
+        if attachment.width > 0 && attachment.width != .greatestFiniteMagnitude {
+            width = attachment.width
+        } else {
+            width = textContainer.size.width
+        }
+
         let height: CGFloat = attachment.height > 0 ? attachment.height : maxDisplaySize.height
+
         return CGSize(width: width, height: height)
     }
 
@@ -288,7 +296,7 @@ extension WPRichContentView: WPTextAttachmentManagerDelegate {
 
         let proposedSize = sizeForAttachment(attachment)
         let finalSize = efficientImageSize(with: url, proposedSize: proposedSize)
-        let image = ritchTextImage(with: finalSize, url, attachment)
+        let image = richTextImage(with: finalSize, url, attachment)
 
         // show that something is loading.
         attachment.maxSize = CGSize(width: finalSize.width, height: finalSize.width / 2.0)
@@ -399,7 +407,7 @@ extension WPRichContentView: WPTextAttachmentManagerDelegate {
 
 private extension WPRichContentView {
     struct Constants {
-        static let textContainerInset = UIEdgeInsetsMake(0.0, 0.0, 16.0, 0.0)
+        static let textContainerInset = UIEdgeInsets.init(top: 0.0, left: 0.0, bottom: 16.0, right: 0.0)
         static let defaultAttachmentHeight = CGFloat(50.0)
         static let photonQuality = 65
     }

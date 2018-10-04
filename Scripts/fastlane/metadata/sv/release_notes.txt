@@ -1,3 +1,4 @@
-Vi har förbättrat bildhanteringen i redigeraren. Oavsett om du drar och släpper en fil eller lägger till den med hjälp av mediaväljaren går det smidigt och snabbt att ladda upp och infoga media.
-Små förbättringar av användargränssnittet på en rad ställen som gör din upplevelse mer intuitiv. Du kommer antagligen inte ens att märka dem, och det är just det som är vitsen!
-Felrättningar.
+Blir du också irriterad när du behöver klistra ett inlägg på webbplatsens startsida men du råkar sitta på bussen och bara har telefonen med dig? Nu kan du klistra inlägg direkt i appen så nu slipper de andra på bussen höra ditt irriterade mummel.
+Spara tid och klick tack vare kommentarsnotiser som visar hela kommentaren direkt på huvudskärmen. Smidigt och bekvämt!
+Vi har gjort de olika skärmsidorna i hela appen mer visuellt samordnade för att underlätta navigeringen. Snabbare navigering ger dig mer tid att skapa.
+Vi tog fram rödpennan och rättade några fel också.

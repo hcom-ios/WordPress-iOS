@@ -125,15 +125,15 @@ fileprivate func < <T: Comparable>(lhs: T?, rhs: T?) -> Bool {
         return ImageLoader(imageView: featuredImageView)
     }()
 
-    fileprivate lazy var readerCardTitleAttributes: [NSAttributedStringKey: Any] = {
+    fileprivate lazy var readerCardTitleAttributes: [NSAttributedString.Key: Any] = {
         return WPStyleGuide.readerCardTitleAttributes()
     }()
 
-    fileprivate lazy var readerCardSummaryAttributes: [NSAttributedStringKey: Any] = {
+    fileprivate lazy var readerCardSummaryAttributes: [NSAttributedString.Key: Any] = {
         return WPStyleGuide.readerCardSummaryAttributes()
     }()
 
-    fileprivate lazy var readerCardReadingTimeAttributes: [NSAttributedStringKey: Any] = {
+    fileprivate lazy var readerCardReadingTimeAttributes: [NSAttributedString.Key: Any] = {
         return WPStyleGuide.readerCardReadingTimeAttributes()
     }()
 
@@ -157,11 +157,7 @@ fileprivate func < <T: Comparable>(lhs: T?, rhs: T?) -> Bool {
         setupFeaturedImageView()
         setupVisitButton()
 
-        if FeatureFlag.saveForLater.enabled {
-            setupSaveForLaterButton()
-        } else {
-            setupShareButton()
-        }
+        setupSaveForLaterButton()
 
         setupMenuButton()
         setupSummaryLabel()
@@ -202,7 +198,7 @@ fileprivate func < <T: Comparable>(lhs: T?, rhs: T?) -> Bool {
     fileprivate func setupCommentActionButton() {
         let image = UIImage(named: "icon-reader-comment")?.imageFlippedForRightToLeftLayoutDirection()
         let highlightImage = UIImage(named: "icon-reader-comment-highlight")?.imageFlippedForRightToLeftLayoutDirection()
-        commentActionButton.setImage(image, for: UIControlState())
+        commentActionButton.setImage(image, for: UIControl.State())
         commentActionButton.setImage(highlightImage, for: .highlighted)
     }
 
@@ -210,7 +206,7 @@ fileprivate func < <T: Comparable>(lhs: T?, rhs: T?) -> Bool {
         let image = UIImage(named: "icon-reader-like")
         let highlightImage = UIImage(named: "icon-reader-like-highlight")
         let selectedImage = UIImage(named: "icon-reader-liked")
-        likeActionButton.setImage(image, for: UIControlState())
+        likeActionButton.setImage(image, for: UIControl.State())
         likeActionButton.setImage(highlightImage, for: .highlighted)
         likeActionButton.setImage(selectedImage, for: .selected)
     }
@@ -222,25 +218,13 @@ fileprivate func < <T: Comparable>(lhs: T?, rhs: T?) -> Bool {
         let tintedIcon = icon.imageWithTintColor(WPStyleGuide.greyLighten10())?.imageFlippedForRightToLeftLayoutDirection()
         let highlightIcon = icon.imageWithTintColor(WPStyleGuide.lightBlue())?.imageFlippedForRightToLeftLayoutDirection()
 
-        visitButton.setTitle(title, for: UIControlState())
+        visitButton.setTitle(title, for: UIControl.State())
         visitButton.setImage(tintedIcon, for: .normal)
         visitButton.setImage(highlightIcon, for: .highlighted)
     }
 
     fileprivate func setupSaveForLaterButton() {
         WPStyleGuide.applyReaderSaveForLaterButtonStyle(saveForLaterButton)
-    }
-
-    fileprivate func setupShareButton() {
-        let size = CGSize(width: 20, height: 20)
-        let icon = Gridicon.iconOfType(.share, withSize: size)
-        let highlightedIcon = icon
-
-        let tintedIcon = icon.imageWithTintColor(WPStyleGuide.greyLighten10())
-        let tintedHighlightedIcon = highlightedIcon.imageWithTintColor(WPStyleGuide.mediumBlue())
-
-        saveForLaterButton.setImage(tintedIcon, for: .normal)
-        saveForLaterButton.setImage(tintedHighlightedIcon, for: .selected)
     }
 
     fileprivate func setupMenuButton() {
@@ -420,13 +404,11 @@ fileprivate func < <T: Comparable>(lhs: T?, rhs: T?) -> Bool {
         configureLikeActionButton()
         configureActionButtonsInsets()
 
-        if FeatureFlag.saveForLater.enabled {
-            configureSaveForLaterButton()
-        }
+        configureSaveForLaterButton()
     }
 
     fileprivate func resetActionButton(_ button: UIButton) {
-        button.setTitle(nil, for: UIControlState())
+        button.setTitle(nil, for: UIControl.State())
         button.isSelected = false
         button.isHidden = true
     }
@@ -531,12 +513,7 @@ fileprivate func < <T: Comparable>(lhs: T?, rhs: T?) -> Bool {
             likeActionButton.setTitle(likeTitle, for: .normal)
             commentActionButton.setTitle(commentTitle, for: .normal)
 
-            if FeatureFlag.saveForLater.enabled {
-                WPStyleGuide.applyReaderSaveForLaterButtonTitles(saveForLaterButton)
-            } else {
-                let shareTitle = NSLocalizedString("Share", comment: "Verb. Button title.  Tap to share a post.")
-                saveForLaterButton.setTitle(shareTitle, for: .normal)
-            }
+            WPStyleGuide.applyReaderSaveForLaterButtonTitles(saveForLaterButton)
         }
     }
 
@@ -560,7 +537,7 @@ fileprivate func < <T: Comparable>(lhs: T?, rhs: T?) -> Bool {
         }
         UIView.animate(withDuration: 0.25,
             delay: 0,
-            options: UIViewAnimationOptions(),
+            options: UIView.AnimationOptions(),
             animations: updateBorder,
             completion: nil)
     }
@@ -603,12 +580,8 @@ fileprivate func < <T: Comparable>(lhs: T?, rhs: T?) -> Bool {
         guard let provider = contentProvider else {
             return
         }
-        if FeatureFlag.saveForLater.enabled {
-            delegate?.readerCell(self, saveActionForProvider: provider)
-            configureSaveForLaterButton()
-        } else {
-            delegate?.readerCell(self, shareActionForProvider: provider, fromView: sender)
-        }
+        delegate?.readerCell(self, saveActionForProvider: provider)
+        configureSaveForLaterButton()
     }
 
     @IBAction func didTapActionButton(_ sender: UIButton) {
@@ -655,11 +628,7 @@ extension ReaderPostCardCell: Accessible {
     func prepareForVoiceOver() {
         prepareCardForVoiceOver()
         prepareHeaderButtonForVoiceOver()
-        if FeatureFlag.saveForLater.enabled {
-            prepareSaveForLaterForVoiceOver()
-        } else {
-            prepareShareForVoiceOver()
-        }
+        prepareSaveForLaterForVoiceOver()
         prepareCommentsForVoiceOver()
         prepareLikeForVoiceOver()
         prepareMenuForVoiceOver()
@@ -670,7 +639,7 @@ extension ReaderPostCardCell: Accessible {
     private func prepareCardForVoiceOver() {
         accessibilityLabel = cardAccessibilityLabel()
         accessibilityHint = cardAccessibilityHint()
-        accessibilityTraits = UIAccessibilityTraitButton
+        accessibilityTraits = UIAccessibilityTraits.button
     }
 
     private func cardAccessibilityLabel() -> String {
@@ -698,7 +667,7 @@ extension ReaderPostCardCell: Accessible {
 
         headerBlogButton.accessibilityLabel = headerButtonAccessibilityLabel(name: authorName, title: blogTitle)
         headerBlogButton.accessibilityHint = headerButtonAccessibilityHint(title: blogTitle)
-        headerBlogButton.accessibilityTraits = UIAccessibilityTraitButton
+        headerBlogButton.accessibilityTraits = UIAccessibilityTraits.button
     }
 
     private func headerButtonAccessibilityLabel(name: String, title: String) -> String {
@@ -720,19 +689,13 @@ extension ReaderPostCardCell: Accessible {
         let isSavedForLater = contentProvider?.isSavedForLater() ?? false
         saveForLaterButton.accessibilityLabel = isSavedForLater ? NSLocalizedString("Saved Post", comment: "Accessibility label for the 'Save Post' button when a post has been saved.") : NSLocalizedString("Save post", comment: "Accessibility label for the 'Save Post' button.")
         saveForLaterButton.accessibilityHint = isSavedForLater ? NSLocalizedString("Remove this post from my saved posts.", comment: "Accessibility hint for the 'Save Post' button when a post is already saved.") : NSLocalizedString("Saves this post for later.", comment: "Accessibility hint for the 'Save Post' button.")
-        saveForLaterButton.accessibilityTraits = UIAccessibilityTraitButton
-    }
-
-    private func prepareShareForVoiceOver() {
-        saveForLaterButton.accessibilityLabel = NSLocalizedString("Share", comment: "Spoken accessibility label")
-        saveForLaterButton.accessibilityHint = NSLocalizedString("Shares this post", comment: "Spoken accessibility hint for Share buttons")
-        saveForLaterButton.accessibilityTraits = UIAccessibilityTraitButton
+        saveForLaterButton.accessibilityTraits = UIAccessibilityTraits.button
     }
 
     private func prepareCommentsForVoiceOver() {
         commentActionButton.accessibilityLabel = commentsLabel()
         commentActionButton.accessibilityHint = NSLocalizedString("Shows comments", comment: "Spoken accessibility hint for Comments buttons")
-        commentActionButton.accessibilityTraits = UIAccessibilityTraitButton
+        commentActionButton.accessibilityTraits = UIAccessibilityTraits.button
     }
 
     private func commentsLabel() -> String {
@@ -758,7 +721,7 @@ extension ReaderPostCardCell: Accessible {
 
         likeActionButton.accessibilityLabel = likeLabel()
         likeActionButton.accessibilityHint = likeHint()
-        likeActionButton.accessibilityTraits = UIAccessibilityTraitButton
+        likeActionButton.accessibilityTraits = UIAccessibilityTraits.button
     }
 
     private func likeLabel() -> String {
@@ -804,14 +767,14 @@ extension ReaderPostCardCell: Accessible {
     private func prepareMenuForVoiceOver() {
         menuButton.accessibilityLabel = NSLocalizedString("More", comment: "Accessibility label for the More button on Reader Cell")
         menuButton.accessibilityHint = NSLocalizedString("Shows more actions", comment: "Accessibility label for the More button on Reader Cell.")
-        menuButton.accessibilityTraits = UIAccessibilityTraitButton
+        menuButton.accessibilityTraits = UIAccessibilityTraits.button
     }
 
     private func prepareVisitForVoiceOver() {
         visitButton.accessibilityLabel = NSLocalizedString("Visit", comment: "Verb. Button title. Accessibility label in Reader")
         let hintFormat = NSLocalizedString("Visit %@ in a web view", comment: "A call to action to visit the specified blog via a web view. Accessibility hint in Reader")
         visitButton.accessibilityHint = String(format: hintFormat, blogName())
-        visitButton.accessibilityTraits = UIAccessibilityTraitButton
+        visitButton.accessibilityTraits = UIAccessibilityTraits.button
     }
 
     func prepareFollowButtonForVoiceOver() {
@@ -821,7 +784,7 @@ extension ReaderPostCardCell: Accessible {
 
         followButton.accessibilityLabel = followLabel()
         followButton.accessibilityHint = followHint()
-        followButton.accessibilityTraits = UIAccessibilityTraitButton
+        followButton.accessibilityTraits = UIAccessibilityTraits.button
     }
 
     private func followLabel() -> String {

@@ -8,7 +8,7 @@ class MarkAsSpam: DefaultNotificationActionCommand {
     let spamIcon: UIButton = {
         let button = MGSwipeButton(title: title, backgroundColor: WPStyleGuide.wordPressBlue())
         button.accessibilityLabel = title
-        button.accessibilityTraits = UIAccessibilityTraitButton
+        button.accessibilityTraits = UIAccessibilityTraits.button
         button.accessibilityHint = hint
         return button
     }()
@@ -17,7 +17,7 @@ class MarkAsSpam: DefaultNotificationActionCommand {
         return spamIcon
     }
 
-    override func execute(context: ActionContext) {
+    override func execute<ContentType: FormattableCommentContent>(context: ActionContext<ContentType>) {
         let request = NotificationDeletionRequest(kind: .spamming, action: { [weak self] requestCompletion in
             self?.actionsService?.spamCommentWithBlock(context.block) { (success) in
                 requestCompletion(success)

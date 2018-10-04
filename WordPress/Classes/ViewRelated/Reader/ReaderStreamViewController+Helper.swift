@@ -2,12 +2,22 @@ import Foundation
 
 extension ReaderStreamViewController {
     // Convenience type for Reader's headers
-    private typealias Header = UIView & ReaderStreamHeader
+    typealias ReaderHeader = UIView & ReaderStreamHeader
 
-    // A simple struct defining a title and message for use with a WPNoResultsView
+    // A simple struct defining a title and message for use with a NoResultsViewController
     public struct NoResultsResponse {
         var title: String
         var message: String
+    }
+
+    func checkNewsCardAvailability(topic: ReaderAbstractTopic) {
+        let containerIdentifier = Identifier(value: topic.title)
+        let mustBadge = news.shouldPresentCard(containerIdentifier: containerIdentifier)
+        let notificationName: NSNotification.Name = mustBadge ? .NewsCardAvailable : .NewsCardNotAvailable
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01, execute: {
+            NotificationCenter.default.post(name: notificationName, object: nil)
+        })
     }
 
     /// Returns the ReaderStreamHeader appropriate for a particular ReaderTopic, including News Card, or nil if there is not one.
@@ -19,44 +29,22 @@ extension ReaderStreamViewController {
     ///
     /// - Returns: A configured instance of UIView.
     ///
-    public class func headerWithNewsCardForStream(_ topic: ReaderAbstractTopic, isLoggedIn: Bool, delegate: ReaderStreamHeaderDelegate) -> UIView? {
+    func headerWithNewsCardForStream(_ topic: ReaderAbstractTopic, isLoggedIn: Bool, container: UITableViewController) -> UIView? {
 
         let header = headerForStream(topic)
-        let configuredHeader = configure(header, topic: topic, isLoggedIn: isLoggedIn, delegate: delegate)
+        let configuredHeader = configure(header, topic: topic, isLoggedIn: isLoggedIn, delegate: self)
 
         // Feature flag is not active
         if !FeatureFlag.newsCard.enabled {
             return configuredHeader
         }
 
-        let newsManager = DefaultNewsManager(service: LocalNewsService(fileName: "News"))
+        let containerIdentifier = Identifier(value: topic.title)
 
-        // News card should not be presented: return configured stream header
-        guard newsManager.shouldPresentCard() else {
-            return configuredHeader
-        }
-
-        let newsCard = NewsCard(manager: newsManager)
-        let news = News(manager: newsManager, ui: newsCard)
-
-        // The news card is not available: return configured stream header
-        guard let cardUI = news.card?.view else {
-            return configuredHeader
-        }
-
-        // This stream does not have a header: return news card
-        guard let sectionHeader = configuredHeader else {
-            return cardUI
-        }
-
-        // Return NewsCard and header
-        let stackView = UIStackView(arrangedSubviews: [cardUI, sectionHeader])
-        stackView.axis = .vertical
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-        return stackView
+        return news.newsCard(containerIdentifier: containerIdentifier, header: header, container: container, delegate: self)
     }
 
-    private class func configure(_ header: Header?, topic: ReaderAbstractTopic, isLoggedIn: Bool, delegate: ReaderStreamHeaderDelegate) -> Header? {
+    func configure(_ header: ReaderHeader?, topic: ReaderAbstractTopic, isLoggedIn: Bool, delegate: ReaderStreamHeaderDelegate) -> ReaderHeader? {
         header?.configureHeader(topic)
         header?.enableLoggedInFeatures(isLoggedIn)
         header?.delegate = delegate
@@ -64,7 +52,7 @@ extension ReaderStreamViewController {
         return header
     }
 
-    private class func headerForStream(_ topic: ReaderAbstractTopic) -> Header? {
+    func headerForStream(_ topic: ReaderAbstractTopic) -> ReaderHeader? {
         if ReaderHelpers.topicIsFreshlyPressed(topic) || ReaderHelpers.topicIsLiked(topic) {
             // no header for these special lists
             return nil
@@ -111,7 +99,7 @@ extension ReaderStreamViewController {
         // if liked
         if ReaderHelpers.topicIsLiked(topic) {
             return NoResultsResponse(
-                title: NSLocalizedString("No likes yet", comment: "A message title"),
+                title: NSLocalizedString("Nothing liked yet", comment: "A message title"),
                 message: NSLocalizedString("Posts that you like will appear here.", comment: "A message explaining the Posts I Like feature in the reader")
             )
         }

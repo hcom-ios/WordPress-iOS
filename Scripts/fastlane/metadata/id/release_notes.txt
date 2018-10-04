@@ -1,3 +1,4 @@
-Ada pemroses gambar yang lebih baik di penyunting. Saat ingin menyeret dan melepas file maupun menambahkan file dengan pemilih media, proses pengunggahan dan penyisipannya begitu lancar dan cepat.
-Peningkatan kecil pada UI di sejumlah lokasi agar pengalaman penggunaan Anda lebih intuitif. Anda mungkin tidak menyadarinya, dan memang itu tujuan kami!
-Membasmi bug.
+Apakah Anda merasa sebal saat ingin melekatkan pos ke halaman depan situs, namun Anda sedang di dalam bus dan hanya membawa ponsel? Kami pun merasa begitu. Kini Anda dapat mengatur pos lekat di aplikasi, dan orang lain di dalam bus tidak perlu mendengar Anda menggerutu.
+Hemat waktu dan ketukan jari dengan pemberitahuan push untuk komentar yang menampilkan seluruh komentar dari layar utama. Semua orang suka berhemat!
+Kami meningkatkan konsistensi visual pada berbagai layar di aplikasi, sehingga memudahkan navigasi situs. Lebih sedikit waktu untuk mempelajari cara menavigasi = lebih banyak waktu untuk berkarya.
+Kami mengambil raket listrik dan membasmi serangga yang mengganggu.

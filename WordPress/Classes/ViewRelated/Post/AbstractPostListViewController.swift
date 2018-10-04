@@ -28,9 +28,7 @@ fileprivate func > <T: Comparable>(lhs: T?, rhs: T?) -> Bool {
 }
 
 
-class AbstractPostListViewController: UIViewController, WPContentSyncHelperDelegate, WPNoResultsViewDelegate, UISearchControllerDelegate, UISearchResultsUpdating, WPTableViewHandlerDelegate {
-
-    typealias WPNoResultsView = WordPressShared.WPNoResultsView
+class AbstractPostListViewController: UIViewController, WPContentSyncHelperDelegate, UISearchControllerDelegate, UISearchResultsUpdating, WPTableViewHandlerDelegate {
 
     fileprivate static let postsControllerRefreshInterval = TimeInterval(300)
     fileprivate static let HTTPErrorCodeForbidden = Int(403)
@@ -47,7 +45,7 @@ class AbstractPostListViewController: UIViewController, WPContentSyncHelperDeleg
     /// This closure will be executed whenever the noResultsView must be visually refreshed.  It's up
     /// to the subclass to define this property.
     ///
-    @objc var refreshNoResultsView: ((WPNoResultsView) -> ())!
+    @objc var refreshNoResultsViewController: ((NoResultsViewController) -> ())!
     @objc var tableViewController: UITableViewController!
     @objc var reloadTableViewBeforeAppearing = false
 
@@ -91,11 +89,11 @@ class AbstractPostListViewController: UIViewController, WPContentSyncHelperDeleg
         return searchHelper
     }()
 
-    @objc lazy var noResultsView: WPNoResultsView = {
-        let noResultsView = WPNoResultsView()
-        noResultsView.delegate = self
+    @objc lazy var noResultsViewController: NoResultsViewController = {
+        let noResultsViewController = NoResultsViewController.controller()
+        noResultsViewController.delegate = self
 
-        return noResultsView
+        return noResultsViewController
     }()
 
     @objc lazy var filterSettings: PostListFilterSettings = {
@@ -153,13 +151,23 @@ class AbstractPostListViewController: UIViewController, WPContentSyncHelperDeleg
     }
 
     fileprivate func registerForKeyboardNotifications() {
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardDidShow(_:)), name: NSNotification.Name.UIKeyboardDidShow, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardDidHide(_:)), name: NSNotification.Name.UIKeyboardDidHide, object: nil)
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(keyboardDidShow(_:)),
+                                               name: UIResponder.keyboardDidShowNotification,
+                                               object: nil)
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(keyboardDidHide(_:)),
+                                               name: UIResponder.keyboardDidHideNotification,
+                                               object: nil)
     }
 
     fileprivate func unregisterForKeyboardNotifications() {
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIKeyboardDidShow, object: nil)
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIKeyboardDidHide, object: nil)
+        NotificationCenter.default.removeObserver(self,
+                                                  name: UIResponder.keyboardDidShowNotification,
+                                                  object: nil)
+        NotificationCenter.default.removeObserver(self,
+                                                  name: UIResponder.keyboardDidHideNotification,
+                                                  object: nil)
     }
 
     @objc fileprivate func keyboardDidShow(_ notification: Foundation.Notification) {
@@ -194,7 +202,8 @@ class AbstractPostListViewController: UIViewController, WPContentSyncHelperDeleg
     }
 
     fileprivate func localKeyboardFrameFromNotification(_ notification: Foundation.Notification) -> CGRect {
-        guard let keyboardFrame = (notification.userInfo?[UIKeyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue else {
+        let key = UIResponder.keyboardFrameEndUserInfoKey
+        guard let keyboardFrame = (notification.userInfo?[key] as? NSValue)?.cgRectValue else {
                 return .zero
         }
 
@@ -219,7 +228,7 @@ class AbstractPostListViewController: UIViewController, WPContentSyncHelperDeleg
             searchController.isActive = false
         }
 
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIApplicationDidBecomeActive, object: nil)
+        NotificationCenter.default.removeObserver(self, name: UIApplication.didBecomeActiveNotification, object: nil)
         unregisterForKeyboardNotifications()
     }
 
@@ -290,8 +299,8 @@ class AbstractPostListViewController: UIViewController, WPContentSyncHelperDeleg
             self?.refreshControl?.endRefreshing()
         }
 
+        hideNoResultsView()
         if tableViewHandler.resultsController.fetchedObjects?.count > 0 {
-            hideNoResultsView()
             if forcingNetworkAlerts {
                 presentNoNetworkAlert()
             }
@@ -379,26 +388,37 @@ class AbstractPostListViewController: UIViewController, WPContentSyncHelperDeleg
 
     // MARK: - GUI: No results view logic
 
-    fileprivate func hideNoResultsView() {
+    private func hideNoResultsView() {
         postListFooterView.isHidden = false
-        noResultsView.removeFromSuperview()
+        rightBarButtonView.isHidden = false
+        noResultsViewController.removeFromView()
     }
 
-    fileprivate func showNoResultsView() {
-        precondition(refreshNoResultsView != nil)
+    private func showNoResultsView() {
 
-        postListFooterView.isHidden = true
-        refreshNoResultsView(noResultsView)
-
-        // Only add and animate no results view if it isn't already
-        // in the table view
-        if noResultsView.isDescendant(of: tableView) == false {
-            tableView.addSubview(withFadeAnimation: noResultsView)
-            noResultsView.translatesAutoresizingMaskIntoConstraints = false
-            tableView.pinSubviewAtCenter(noResultsView)
+        guard refreshNoResultsViewController != nil else {
+            return
         }
 
-        tableView.sendSubview(toBack: noResultsView)
+        postListFooterView.isHidden = true
+        rightBarButtonView.isHidden = true
+        refreshNoResultsViewController(noResultsViewController)
+
+        // Only add no results view if it isn't already in the table view
+        if noResultsViewController.view.isDescendant(of: tableView) == false {
+            tableViewController.addChild(noResultsViewController)
+            tableView.addSubview(withFadeAnimation: noResultsViewController.view)
+            noResultsViewController.view.frame = tableView.frame
+
+            // Adjust the NRV to accommodate for the search bar.
+            if let tableHeaderView = tableView.tableHeaderView {
+                noResultsViewController.view.frame.origin.y = tableHeaderView.frame.origin.y
+            }
+
+            noResultsViewController.didMove(toParent: tableViewController)
+        }
+
+        tableView.sendSubviewToBack(noResultsViewController.view)
     }
 
     // MARK: - TableView Helpers
@@ -516,7 +536,7 @@ class AbstractPostListViewController: UIViewController, WPContentSyncHelperDeleg
     }
 
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return UITableViewAutomaticDimension
+        return UITableView.automaticDimension
     }
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -561,12 +581,6 @@ class AbstractPostListViewController: UIViewController, WPContentSyncHelperDeleg
     }
 
     @IBAction func handleAddButtonTapped(_ sender: AnyObject) {
-        createPost()
-    }
-
-    @IBAction func didTap(_ noResultsView: WPNoResultsView) {
-        WPAnalytics.track(.postListNoResultsButtonPressed, withProperties: propertiesForAnalytics())
-
         createPost()
     }
 
@@ -742,8 +756,7 @@ class AbstractPostListViewController: UIViewController, WPContentSyncHelperDeleg
     func syncContentEnded(_ syncHelper: WPContentSyncHelper) {
         refreshControl?.endRefreshing()
         postListFooterView.showSpinner(false)
-
-        noResultsView.removeFromSuperview()
+        noResultsViewController.removeFromView()
 
         if tableViewHandler.resultsController.fetchedObjects?.count == 0 {
             // This is a special case.  Core data can be a bit slow about notifying
@@ -869,7 +882,7 @@ class AbstractPostListViewController: UIViewController, WPContentSyncHelperDeleg
         let cancelTitle = NSLocalizedString("Cancel", comment: "Button shown when the author is asked for publishing confirmation.")
         let publishTitle = NSLocalizedString("Publish", comment: "Button shown when the author is asked for publishing confirmation.")
 
-        let style: UIAlertControllerStyle = UIDevice.isPad() ? .alert : .actionSheet
+        let style: UIAlertController.Style = UIDevice.isPad() ? .alert : .actionSheet
         let alertController = UIAlertController(title: title, message: nil, preferredStyle: style)
 
         alertController.addCancelActionWithTitle(cancelTitle)
@@ -1105,5 +1118,14 @@ extension AbstractPostListViewController: NetworkAwareUI {
 extension AbstractPostListViewController: NetworkStatusDelegate {
     func networkStatusDidChange(active: Bool) {
         automaticallySyncIfAppropriate()
+    }
+}
+
+// MARK: - NoResultsViewControllerDelegate
+
+extension AbstractPostListViewController: NoResultsViewControllerDelegate {
+    func actionButtonPressed() {
+        WPAnalytics.track(.postListNoResultsButtonPressed, withProperties: propertiesForAnalytics())
+        createPost()
     }
 }

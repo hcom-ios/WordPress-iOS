@@ -1,3 +1,4 @@
-De editor heeft verbeterde functies voor afbeeldingen. Het uploaden en invoeren van afbeeldingen verloopt nu eenvoudig en snel, of je nu een bestand versleept en plaatst of er een toevoegt met de mediakiezer.
-Kleine UI-verbeteringen op verschillende plaatsen om je ervaring intuïtiever te maken. Je zult ze waarschijnlijk niet opmerken, maar dat is nou net de bedoeling!
-Bugs geplet.
+Word je er gek van als je weet dat je een bericht op de voorpagina van je site wilt plaatsen, maar je in de bus zit en alleen je telefoon bij je hebt? Wij ook. Je kunt nu sticky berichten instellen in de app, waardoor anderen in de bus je niet hoeven te horen klagen.
+Bespaar tijd en handelingen met pushberichten voor reacties die de hele reactie op het startscherm weergeven. Iedereen houdt van besparing!
+We hebben de weergave van verschillende schermen in de app beter op elkaar afgestemd, zodat je gemakkelijker kunt navigeren. Minder tijd besteed aan navigeren = meer tijd besteed aan creëren.
+We hebben de vliegenmepper erbij gepakt en wat bugs verwijderd.

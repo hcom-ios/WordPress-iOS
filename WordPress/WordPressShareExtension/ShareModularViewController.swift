@@ -71,50 +71,13 @@ class ShareModularViewController: ShareExtensionAbstractViewController {
         return refreshControl
     }()
 
-    /// Activity spinner used when loading sites
-    ///
-    fileprivate lazy var loadingActivityIndicatorView = UIActivityIndicatorView(activityIndicatorStyle: .gray)
-
     /// Activity indicator used when loading categories
     ///
-    fileprivate lazy var categoryActivityIndicator = UIActivityIndicatorView(activityIndicatorStyle: .gray)
+    fileprivate lazy var categoryActivityIndicator = UIActivityIndicatorView(style: .gray)
 
     /// No results view
     ///
-    @objc fileprivate lazy var noResultsView: WPNoResultsView = {
-        let title = NSLocalizedString("No available sites", comment: "A short message that informs the user no sites could be loaded in the share extension.")
-        return WPNoResultsView(title: title, message: nil, accessoryView: nil, buttonTitle: nil)
-    }()
-
-    /// Loading view
-    ///
-    @objc fileprivate lazy var loadingView: WPNoResultsView = {
-        let title = NSLocalizedString("Fetching sites...", comment: "A short message to inform the user data for their sites are being fetched.")
-        return WPNoResultsView(title: title, message: nil, accessoryView: loadingActivityIndicatorView, buttonTitle: nil)
-    }()
-
-    /// Publishing view
-    ///
-    @objc fileprivate lazy var publishingView: WPNoResultsView = {
-        let title: String
-        if self.originatingExtension == .share {
-            title = NSLocalizedString("Publishing post...", comment: "A short message that informs the user a post is being published to the server from the share extension.")
-        } else {
-            title = NSLocalizedString("Saving post…", comment: "A short message that informs the user a draft post is being saved to the server from the share extension.")
-        }
-        let activityIndicatorView = UIActivityIndicatorView(activityIndicatorStyle: .gray)
-        activityIndicatorView.startAnimating()
-        return WPNoResultsView(title: title, message: nil, accessoryView: activityIndicatorView, buttonTitle: nil)
-    }()
-
-    /// Cancelling view
-    ///
-    @objc fileprivate lazy var cancellingView: WPNoResultsView = {
-        let title = NSLocalizedString("Cancelling...", comment: "A short message that informs the user the share extension is being cancelled.")
-        let activityIndicatorView = UIActivityIndicatorView(activityIndicatorStyle: .gray)
-        activityIndicatorView.startAnimating()
-        return WPNoResultsView(title: title, message: nil, accessoryView: activityIndicatorView, buttonTitle: nil)
-    }()
+    fileprivate lazy var noResultsViewController = NoResultsViewController.controller()
 
     // MARK: - View Lifecycle
 
@@ -125,7 +88,6 @@ class ShareModularViewController: ShareExtensionAbstractViewController {
         setupNavigationBar()
         setupSitesTableView()
         setupModulesTableView()
-        clearAllNoResultsViews()
 
         // Setup Autolayout
         view.setNeedsUpdateConstraints()
@@ -368,7 +330,7 @@ extension ShareModularViewController: UITableViewDataSource {
     }
 
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return UITableViewAutomaticDimension
+        return UITableView.automaticDimension
     }
 
     func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
@@ -634,50 +596,44 @@ fileprivate extension ShareModularViewController {
 
     func showLoadingView() {
         updatePublishButtonStatus()
-        clearAllNoResultsViews()
-        if refreshControl.isRefreshing {
-            loadingActivityIndicatorView.alpha = Constants.zeroAlpha
-        } else {
-            loadingActivityIndicatorView.alpha = Constants.fullAlpha
-            loadingActivityIndicatorView.startAnimating()
-        }
-        view.addSubview(loadingView)
-        loadingView.centerInSuperview()
+        configureAndDisplayStatus(title: StatusText.loadingTitle, accessoryView: NoResultsViewController.loadingAccessoryView())
     }
 
     func showPublishingView() {
+        let title: String = {
+            if self.originatingExtension == .share {
+                return StatusText.publishingTitle
+            }
+            return StatusText.savingTitle
+        }()
+
         updatePublishButtonStatus()
-        clearAllNoResultsViews()
-        view.addSubview(publishingView)
-        publishingView.centerInSuperview()
+        configureAndDisplayStatus(title: title, accessoryView: NoResultsViewController.loadingAccessoryView())
     }
 
     func showCancellingView() {
         updatePublishButtonStatus()
-        clearAllNoResultsViews()
-        view.addSubview(cancellingView)
-        cancellingView.centerInSuperview()
+        configureAndDisplayStatus(title: StatusText.cancellingTitle, accessoryView: NoResultsViewController.loadingAccessoryView())
     }
 
     func showEmptySitesIfNeeded() {
         updatePublishButtonStatus()
-        clearAllNoResultsViews()
+        noResultsViewController.removeFromView()
         refreshControl.endRefreshing()
-        loadingActivityIndicatorView.stopAnimating()
 
         guard !hasSites else {
             return
         }
 
-        view.addSubview(noResultsView)
-        noResultsView.centerInSuperview()
+        configureAndDisplayStatus(title: StatusText.noSitesTitle)
     }
 
-    func clearAllNoResultsViews() {
-        noResultsView.removeFromSuperview()
-        loadingView.removeFromSuperview()
-        publishingView.removeFromSuperview()
-        cancellingView.removeFromSuperview()
+    func configureAndDisplayStatus(title: String, accessoryView: UIView? = nil) {
+        noResultsViewController.removeFromView()
+        noResultsViewController.configure(title: title, accessoryView: accessoryView)
+        addChild(noResultsViewController)
+        view.addSubview(noResultsViewController.view)
+        noResultsViewController.didMove(toParent: self)
     }
 
     func updatePublishButtonStatus() {
@@ -913,7 +869,7 @@ fileprivate extension ShareModularViewController {
         let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
 
         let dismissAction = UIAlertAction(title: dismiss, style: .cancel) { [weak self] (action) in
-            self?.clearAllNoResultsViews()
+            self?.noResultsViewController.removeFromView()
         }
         alertController.addAction(dismissAction)
 
@@ -979,6 +935,14 @@ fileprivate extension ShareModularViewController {
         static let summaryDraftSingular = NSLocalizedString("Save 1 photo as a draft post on:", comment: "Text displayed in the share extension's summary view that describes the action of saving a single photo in a draft post.")
         static let summaryDraftPlural   = NSLocalizedString("Save %ld photos as a draft post on:", comment: "Text displayed in the share extension's summary view that describes the action of saving multiple photos in a draft post.")
     }
+
+    struct StatusText {
+        static let loadingTitle = NSLocalizedString("Fetching sites...", comment: "A short message to inform the user data for their sites are being fetched.")
+        static let publishingTitle = NSLocalizedString("Publishing post...", comment: "A short message that informs the user a post is being published to the server from the share extension.")
+        static let savingTitle = NSLocalizedString("Saving post…", comment: "A short message that informs the user a draft post is being saved to the server from the share extension.")
+        static let cancellingTitle = NSLocalizedString("Cancelling...", comment: "A short message that informs the user the share extension is being cancelled.")
+        static let noSitesTitle = NSLocalizedString("No available sites", comment: "A short message that informs the user no sites could be loaded in the share extension.")
+    }
 }
 
 // MARK: - UITableView Cells
@@ -990,7 +954,7 @@ class ShareSitesTableViewCell: WPTableViewCell {
         super.init(coder: aDecoder)
     }
 
-    public required override init(style: UITableViewCellStyle, reuseIdentifier: String?) {
+    public required override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: .subtitle, reuseIdentifier: reuseIdentifier)
     }
 
