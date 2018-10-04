@@ -1,3 +1,5 @@
 language: swift
+install:
+- rake xcode
 script:
 - xcodebuild test -workspace WordPress.xcworkspace -scheme WordPress -sdk iphonesimulator
